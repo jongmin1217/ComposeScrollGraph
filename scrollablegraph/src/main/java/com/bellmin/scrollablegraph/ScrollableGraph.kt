@@ -1,17 +1,26 @@
 package com.bellmin.scrollablegraph
 
-import android.R.attr.fontFamily
-import android.R.style
 import android.annotation.SuppressLint
 import android.graphics.Paint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -30,11 +39,22 @@ import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontSynthesis
-import androidx.compose.ui.text.font.FontVariation.weight
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.font.FontWeight.Companion.W700
-import androidx.compose.ui.unit.*
-import com.bellmin.scrollablegraph.data.*
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.dp
+import com.bellmin.scrollablegraph.data.ChartLine
+import com.bellmin.scrollablegraph.data.DividerOrientation
+import com.bellmin.scrollablegraph.data.GridLineStyle
+import com.bellmin.scrollablegraph.data.LineChartOption
+import com.bellmin.scrollablegraph.data.LineOption
+import com.bellmin.scrollablegraph.data.LinePattern
+import com.bellmin.scrollablegraph.data.LineStyle
+import com.bellmin.scrollablegraph.data.XAxisMode
+import com.bellmin.scrollablegraph.data.XAxisOption
+import com.bellmin.scrollablegraph.data.XLabelOption
+import com.bellmin.scrollablegraph.data.YLabelOption
 import kotlin.math.max
 
 @SuppressLint("DefaultLocale", "UnusedBoxWithConstraintsScope")
@@ -119,18 +139,26 @@ fun ScrollableGraph(
             val space = (heightDp - topPadding - bottomPadding) / max(1, yAxisOpt.option.labelCount - 1)
             if (space > 0.dp) {
                 repeat(yAxisOpt.option.labelCount) { i ->
-                    Text(
-                        text = String.format(yAxisOpt.option.formatter, sortedDesc[i]),
+                    Box(
                         modifier = Modifier
+                            .width(startPadding - yAxisOpt.option.textSpace)
+                            .fillMaxHeight()
                             .align(Alignment.TopStart)
-                            .padding(top = space * i),
-                        style = TextStyle(
-                            color = yAxisOpt.option.style.color,
-                            fontFamily = yAxisOpt.option.style.fontFamily,
-                            fontWeight = FontWeight(yAxisOpt.option.style.fontWeight)
-                        ),
-                        fontSize = yAxisOpt.option.style.fontSize.toSp()
-                    )
+                    ) {
+                        Text(
+                            text = String.format(yAxisOpt.option.formatter, sortedDesc[i]),
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(top = space * i),
+                            style = TextStyle(
+                                color = yAxisOpt.option.style.color,
+                                fontFamily = yAxisOpt.option.style.fontFamily,
+                                fontWeight = FontWeight(yAxisOpt.option.style.fontWeight)
+                            ),
+                            fontSize = yAxisOpt.option.style.fontSize.toSp()
+                        )
+                    }
+
                     if (i in 1 until (yAxisOpt.option.labelCount - 1)) {
                         yAxisOpt.option.gridLine?.let { grid ->
                             val lineMod = Modifier
