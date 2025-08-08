@@ -2,6 +2,7 @@ package com.bellmin.scrollablegraph.data
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 
 // 1. 실제 차트 데이터(선 여러 개 지원)
 data class ChartLine(
@@ -21,5 +22,5 @@ data class LineStyle(
 // 2-1. 선 패턴 (직선, 점선 등)
 sealed class LinePattern {
     object Solid : LinePattern()
-    data class Dashed(val dashLength: Dp, val gapLength: Dp) : LinePattern()
+    data class Dashed(val dashLength: Dp = 6.dp, val gapLength: Dp = 4.dp) : LinePattern()
 }

@@ -7,16 +7,31 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontWeight.Companion.W700
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import com.bellmin.composescrollgraph.data.Stt
 import com.bellmin.composescrollgraph.data.SttItem
@@ -27,13 +42,15 @@ import com.bellmin.scrollablegraph.data.ChartLine
 import com.bellmin.scrollablegraph.data.GridLineStyle
 import com.bellmin.scrollablegraph.data.LabelStyle
 import com.bellmin.scrollablegraph.data.LineChartOption
+import com.bellmin.scrollablegraph.data.LineOption
 import com.bellmin.scrollablegraph.data.LinePattern
 import com.bellmin.scrollablegraph.data.LineStyle
-import com.bellmin.scrollablegraph.data.XAxisLabelOption
 import com.bellmin.scrollablegraph.data.XAxisMode
+import com.bellmin.scrollablegraph.data.XAxisOption
+import com.bellmin.scrollablegraph.data.XLabelOption
 import com.bellmin.scrollablegraph.data.YAxisOption
+import com.bellmin.scrollablegraph.data.YLabelOption
 import com.google.gson.Gson
-import kotlin.jvm.java
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,25 +70,60 @@ class MainActivity : ComponentActivity() {
                     // 1. STT를 ChartLine 리스트로 변환
                     val chartLines = sttItemToChartLines(sttItem)
 
+                    var showXLabel by remember { mutableStateOf(true) }
+                    var showYLabel by remember { mutableStateOf(true) }
+                    var enableScroll by remember { mutableStateOf(true) }
+
+                    val roboto = FontFamily(
+                        Font(R.font.spoqa_han_sans_neo_medium, FontWeight.Normal),
+                        Font(R.font.spoqa_han_sans_neo_bold, FontWeight.Bold)
+                    )
+
                     // 2. 그래프 옵션(예시)
                     val chartOption = LineChartOption(
                         lines = chartLines,
-                        xAxisMode = XAxisMode.Scrollable(
-                            step = 0.001f, // 데이터 해상도에 맞춰서
-                            visibleRange = 1000f // 한 화면에 50step
-                        ),
-                        xAxisLabelOption = XAxisLabelOption(
-                            labelIndices = xLabel, // 원하는 구간 인덱스
-                            style = LabelStyle(
-                                color = Color.Black,
-                                fontWeight = 700
-                            ),
-                            gridLine = GridLineStyle(
-                                color = Color.LightGray,
-                                pattern = LinePattern.Dashed(6.dp, 3.dp)
+                        xAxisMode = if(enableScroll){
+                            XAxisMode.Scrollable(
+                                step = 0.001f,
+                                visibleRange = 2000f
                             )
+                        }else{
+                            XAxisMode.FixedRange
+                        },
+                        xAxis = XAxisOption(
+                            option = if(showXLabel){
+                                XLabelOption.Show(
+                                    labelIndices = xLabel, // 원하는 구간 인덱스
+                                    style = LabelStyle(
+                                        color = Color.Black,
+                                        fontWeight = 700,
+                                        fontFamily = roboto
+                                    ),
+                                    gridLine = GridLineStyle(
+                                        color = Color.LightGray,
+                                        pattern = LinePattern.Dashed(6.dp, 3.dp)
+                                    )
+                                )
+                            }else{
+                                XLabelOption.Hide
+                            }
                         ),
-                        chartFrame = ChartFrameOption()
+                        yAxis = YAxisOption(
+                            option = if(showYLabel){
+                                YLabelOption.Show().copy(
+                                    gridLine = GridLineStyle(
+                                        color = Color.LightGray,
+                                        pattern = LinePattern.Dashed(6.dp, 3.dp)
+                                    ),
+                                    style = LabelStyle().copy(
+                                        fontFamily = roboto,
+                                        fontWeight = 700
+                                    )
+                                )
+                            }else{
+                                YLabelOption.Hide
+                            }
+                        )
                     )
 
                     Column(
@@ -84,10 +136,83 @@ class MainActivity : ComponentActivity() {
                         ScrollableGraph(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(400.dp)
+                                .height(300.dp)
                                 .padding(20.dp),
                             chartOption = chartOption
                         )
+
+
+                        Row(
+                            modifier = Modifier
+                                .align(Alignment.CenterHorizontally)
+                                .padding(vertical = 10.dp)
+                        ) {
+                            Text(
+                                text = "Show X Label",
+                                style = TextStyle(
+                                    fontSize = 15.dp.textSp,
+                                    fontWeight = W700
+                                ),
+                                modifier = Modifier
+                                    .align(Alignment.CenterVertically)
+                                    .padding(end = 20.dp)
+                            )
+
+                            Switch(
+                                checked = showXLabel,
+                                onCheckedChange = {
+                                    showXLabel = it
+                                }
+                            )
+                        }
+
+                        Row(
+                            modifier = Modifier
+                                .align(Alignment.CenterHorizontally)
+                                .padding(vertical = 10.dp)
+                        ) {
+                            Text(
+                                text = "Show Y Label",
+                                style = TextStyle(
+                                    fontSize = 15.dp.textSp,
+                                    fontWeight = W700
+                                ),
+                                modifier = Modifier
+                                    .align(Alignment.CenterVertically)
+                                    .padding(end = 20.dp)
+                            )
+
+                            Switch(
+                                checked = showYLabel,
+                                onCheckedChange = {
+                                    showYLabel = it
+                                }
+                            )
+                        }
+
+                        Row(
+                            modifier = Modifier
+                                .align(Alignment.CenterHorizontally)
+                                .padding(vertical = 10.dp)
+                        ) {
+                            Text(
+                                text = "Scrollable",
+                                style = TextStyle(
+                                    fontSize = 15.dp.textSp,
+                                    fontWeight = W700
+                                ),
+                                modifier = Modifier
+                                    .align(Alignment.CenterVertically)
+                                    .padding(end = 20.dp)
+                            )
+
+                            Switch(
+                                checked = enableScroll,
+                                onCheckedChange = {
+                                    enableScroll = it
+                                }
+                            )
+                        }
                     }
 
                 }
@@ -146,3 +271,8 @@ fun sttItemToChartLines(
     }
     return lines
 }
+
+val Dp.textSp: TextUnit
+    @Composable get() = with(LocalDensity.current) {
+        this@textSp.toSp()
+    }
