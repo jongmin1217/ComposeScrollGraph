@@ -1,5 +1,6 @@
 package com.bellmin.composescrollgraph
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -32,9 +33,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material3.Icon
@@ -54,8 +53,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -71,8 +68,13 @@ import com.bellmin.composescrollgraph.ui.theme.ComposeScrollGraphTheme
 import com.bellmin.scrollablegraph.ScrollableGraph
 import com.bellmin.scrollablegraph.data.ChartFrameOption
 import com.bellmin.scrollablegraph.data.ChartLine
+import com.bellmin.scrollablegraph.data.GraphChartLine
+import com.bellmin.scrollablegraph.data.GraphLinePattern
+import com.bellmin.scrollablegraph.data.GraphLineStyle
 import com.bellmin.scrollablegraph.data.GridLineStyle
 import com.bellmin.scrollablegraph.data.LabelStyle
+import com.bellmin.scrollablegraph.data.LabelStyleDP
+import com.bellmin.scrollablegraph.data.LabelStyleInt
 import com.bellmin.scrollablegraph.data.LineChartOption
 import com.bellmin.scrollablegraph.data.LineOption
 import com.bellmin.scrollablegraph.data.LinePattern
@@ -82,20 +84,75 @@ import com.bellmin.scrollablegraph.data.XAxisOption
 import com.bellmin.scrollablegraph.data.XLabelOption
 import com.bellmin.scrollablegraph.data.YAxisOption
 import com.bellmin.scrollablegraph.data.YLabelOption
+import com.bellmin.scrollablegraph.view.ScrollableGraphView
 import com.google.gson.Gson
 
 class MainActivity : ComponentActivity() {
+//    @SuppressLint("MissingInflatedId")
+//    override fun onCreate(savedInstanceState: Bundle?) {
+//        super.onCreate(savedInstanceState)
+//
+//        val jsonString = readAssetFile(this, "Intonationexample.json")
+//        val gson = Gson()
+//        val stt: Stt = gson.fromJson(jsonString, Stt::class.java)
+//        val sttItem = stt.resultData.result["5"]!!
+//        val xLabel =
+//            sttItem.words!!.map { (((it.start ?: 0.0) + (it.end ?: 0.0)) / 2) to (it.text ?: "") }
+//        val chartLines = sttItemToChartLines(
+//            sttItem,
+//            GraphLineStyle(
+//                color = R.color.teal_200,
+//                thickness = 6,
+//                isRoundCap = true,
+//                pattern = GraphLinePattern.Solid,
+//                context = this
+//            ),
+//            GraphLineStyle(
+//                color = R.color.teal_700,
+//                thickness = 6,
+//                isRoundCap = true,
+//                pattern = GraphLinePattern.Solid,
+//                context = this
+//            )
+//        )
+//
+//        val xAxisMode = XAxisMode.Scrollable(step = 0.001f, visibleRange = 1000f)
+//
+//        setContentView(R.layout.activity_main)
+//
+//        val scrollableGraphView = findViewById<ScrollableGraphView>(R.id.scrollableGraphView)
+//        scrollableGraphView.setChart(chartLines)
+//        scrollableGraphView.setXAxisMode(xAxisMode)
+//        scrollableGraphView.setXAxis(
+//            XAxisOption(
+//                XLabelOption.Show(
+//                    labelIndices = xLabel,
+//                    style = LabelStyleInt(
+//                        color = R.color.black,
+//                        fontSize = 20,
+//                        fontWeight = 700,
+//                        context = baseContext
+//                    ),
+//                    textSpace = 0.dp
+//                )
+//            )
+//        )
+//
+//
+//    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val jsonString = readAssetFile(this, "Intonationexample.json")
-        val gson = Gson()
-        val stt: Stt = gson.fromJson(jsonString, Stt::class.java)
 
         enableEdgeToEdge()
         setContent {
             ComposeScrollGraphTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    val jsonString = readAssetFile(this, "Intonationexample.json")
+                    val gson = Gson()
+                    val stt: Stt = gson.fromJson(jsonString, Stt::class.java)
+
                     val sttItem = stt.resultData.result["5"]!!
 
                     val roboto = FontFamily(
@@ -105,14 +162,14 @@ class MainActivity : ComponentActivity() {
 
                     // X Label
                     var isShowXLabel by remember { mutableStateOf(true) }
-                    var xLabelStyle by remember { mutableStateOf(LabelStyle(fontFamily = roboto)) }
+                    var xLabelStyle by remember { mutableStateOf(LabelStyleDP(fontFamily = roboto)) }
                     var xLabelTextSpace by remember { mutableStateOf(10.dp) }
                     var isShowXLabelGridLine by remember { mutableStateOf(true) }
                     var xLabelGridLineStyle by remember { mutableStateOf(GridLineStyle()) }
 
                     // Y Label
                     var isShowYLabel by remember { mutableStateOf(true) }
-                    var yLabelStyle by remember { mutableStateOf(LabelStyle(fontFamily = roboto)) }
+                    var yLabelStyle by remember { mutableStateOf(LabelStyleDP(fontFamily = roboto)) }
                     var yLabelTextSpace by remember { mutableStateOf(10.dp) }
                     var isShowYLabelGridLine by remember { mutableStateOf(true) }
                     var yLabelGridLineStyle by remember { mutableStateOf(GridLineStyle()) }
@@ -150,7 +207,9 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    val xLabel = sttItem.words!!.map { (((it.start?:0.0) + (it.end?:0.0))/2) to (it.text?:"") }
+                    val xLabel = sttItem.words!!.map {
+                        (((it.start ?: 0.0) + (it.end ?: 0.0)) / 2) to (it.text ?: "")
+                    }
                     val chartLines = sttItemToChartLines(
                         sttItem,
                         energyLineStyle,
@@ -163,35 +222,35 @@ class MainActivity : ComponentActivity() {
 
                     val chartOption = LineChartOption(
                         lines = chartLines,
-                        xAxisMode = if(enableScroll){
+                        xAxisMode = if (enableScroll) {
                             XAxisMode.Scrollable(
                                 step = 0.001f,
                                 visibleRange = visibleRange
                             )
-                        }else{
+                        } else {
                             XAxisMode.FixedRange
                         },
                         xAxis = XAxisOption(
                             option = XLabelOption.Show(
                                 labelIndices = xLabel,
-                                style = if(isShowXLabel) xLabelStyle else null,
-                                gridLine = if(isShowXLabelGridLine) xLabelGridLineStyle else null,
+                                style = if (isShowXLabel) xLabelStyle else null,
+                                gridLine = if (isShowXLabelGridLine) xLabelGridLineStyle else null,
                                 textSpace = xLabelTextSpace
                             )
                         ),
                         yAxis = YAxisOption(
                             option = YLabelOption.Show().copy(
                                 labelCount = yLabelCnt,
-                                gridLine = if(isShowYLabelGridLine) yLabelGridLineStyle else null,
-                                style = if(isShowYLabel) yLabelStyle else null,
+                                gridLine = if (isShowYLabelGridLine) yLabelGridLineStyle else null,
+                                style = if (isShowYLabel) yLabelStyle else null,
                                 textSpace = yLabelTextSpace
                             )
                         ),
                         chartFrame = ChartFrameOption(
-                            top = if(isShowTopGridLine) LineOption.Show(topGridLineStyle) else LineOption.Hide,
-                            bottom = if(isShowBottomGridLine) LineOption.Show(bottomGridLineStyle) else LineOption.Hide,
-                            left = if(isShowLeftGridLine) LineOption.Show(leftGridLineStyle) else LineOption.Hide,
-                            right = if(isShowRightGridLine) LineOption.Show(rightGridLineStyle) else LineOption.Hide,
+                            top = if (isShowTopGridLine) LineOption.Show(topGridLineStyle) else LineOption.Hide,
+                            bottom = if (isShowBottomGridLine) LineOption.Show(bottomGridLineStyle) else LineOption.Hide,
+                            left = if (isShowLeftGridLine) LineOption.Show(leftGridLineStyle) else LineOption.Hide,
+                            right = if (isShowRightGridLine) LineOption.Show(rightGridLineStyle) else LineOption.Hide,
                         )
                     )
 
@@ -307,7 +366,7 @@ class MainActivity : ComponentActivity() {
                                             "Left",
                                             "Right"
                                         )
-                                        
+
                                         list.forEach { item ->
                                             Text(
                                                 text = item,
@@ -320,20 +379,20 @@ class MainActivity : ComponentActivity() {
                                             )
 
                                             SettingGridLine(
-                                                isShowGridLine = when(item){
+                                                isShowGridLine = when (item) {
                                                     "Top" -> isShowTopGridLine
                                                     "Bottom" -> isShowBottomGridLine
                                                     "Left" -> isShowLeftGridLine
                                                     else -> isShowRightGridLine
                                                 },
-                                                gridLineStyle = when(item){
+                                                gridLineStyle = when (item) {
                                                     "Top" -> topGridLineStyle
                                                     "Bottom" -> bottomGridLineStyle
                                                     "Left" -> leftGridLineStyle
                                                     else -> rightGridLineStyle
                                                 },
                                                 onChangedShowGridLine = {
-                                                    when(item){
+                                                    when (item) {
                                                         "Top" -> isShowTopGridLine = it
                                                         "Bottom" -> isShowBottomGridLine = it
                                                         "Left" -> isShowLeftGridLine = it
@@ -341,7 +400,7 @@ class MainActivity : ComponentActivity() {
                                                     }
                                                 },
                                                 onChangedGridLineStyle = {
-                                                    when(item){
+                                                    when (item) {
                                                         "Top" -> topGridLineStyle = it
                                                         "Bottom" -> bottomGridLineStyle = it
                                                         "Left" -> leftGridLineStyle = it
@@ -350,7 +409,7 @@ class MainActivity : ComponentActivity() {
                                                 }
                                             )
                                         }
-                                        
+
                                     }
                                 }
                             )
@@ -382,12 +441,12 @@ class MainActivity : ComponentActivity() {
                                             )
 
                                             SettingLine(
-                                                lineStyle = when(item){
+                                                lineStyle = when (item) {
                                                     "energy" -> energyLineStyle
                                                     else -> intonationLineStyle
                                                 },
                                                 onChangedLineStyle = {
-                                                    when(item){
+                                                    when (item) {
                                                         "energy" -> energyLineStyle = it
                                                         "intonation" -> intonationLineStyle = it
                                                     }
@@ -440,10 +499,51 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+
 }
 
 fun readAssetFile(context: Context, fileName: String): String {
     return context.assets.open(fileName).bufferedReader().use { it.readText() }
+}
+
+fun sttItemToChartLines(
+    sttItem: SttItem,
+    energyLineStyle: GraphLineStyle,
+    intonationLineStyle: GraphLineStyle
+): List<GraphChartLine> {
+    val lines = mutableListOf<GraphChartLine>()
+
+    // 예시: energy 그래프
+    if (!sttItem.energyTime.isNullOrEmpty() && !sttItem.energyData.isNullOrEmpty()) {
+        val pointCount = minOf(sttItem.energyTime.size, sttItem.energyData.size)
+        val points = (0 until pointCount).map { i ->
+            sttItem.energyTime[i].toFloat() to sttItem.energyData[i].toFloat()
+        }
+        lines.add(
+            GraphChartLine(
+                label = "energy",
+                points = points,
+                style = energyLineStyle
+            )
+        )
+    }
+
+    // 예시: intonation 그래프
+    if (!sttItem.intonationTime.isNullOrEmpty() && !sttItem.intonationData.isNullOrEmpty()) {
+        val pointCount = minOf(sttItem.intonationTime.size, sttItem.intonationData.size)
+        val points = (0 until pointCount).map { i ->
+            sttItem.intonationTime[i].toFloat() to sttItem.intonationData[i].toFloat()
+        }
+        lines.add(
+            GraphChartLine(
+                label = "intonation",
+                points = points,
+                style = intonationLineStyle
+            )
+        )
+    }
+    return lines
 }
 
 fun sttItemToChartLines(
@@ -485,12 +585,13 @@ fun sttItemToChartLines(
     return lines
 }
 
+
 @Composable
 fun ExpandedContent(
     modifier: Modifier = Modifier,
     title: String,
-    content : @Composable () -> Unit
-){
+    content: @Composable () -> Unit
+) {
     var isExpanded by remember { mutableStateOf(false) }
 
     val arrowRotation by animateFloatAsState(
@@ -511,7 +612,7 @@ fun ExpandedContent(
         Row(
             modifier = Modifier
                 .height(40.dp)
-                .clickable{
+                .clickable {
                     isExpanded = !isExpanded
                 }
         ) {
@@ -556,7 +657,7 @@ fun SwitchContent(
     title: String,
     isChecked: Boolean,
     onChangedChecked: (Boolean) -> Unit
-){
+) {
     Row(
         modifier = modifier
     ) {
@@ -689,10 +790,14 @@ fun SettingNumberContent(
                     )
                     .align(Alignment.CenterVertically),
                 onClick = {
-                    if(isShowDown) onDownClick()
+                    if (isShowDown) onDownClick()
                 }
             ) {
-                if(isShowDown) Icon(imageVector = Icons.Rounded.KeyboardArrowDown, contentDescription = "down", tint = Color.Black)
+                if (isShowDown) Icon(
+                    imageVector = Icons.Rounded.KeyboardArrowDown,
+                    contentDescription = "down",
+                    tint = Color.Black
+                )
             }
 
             Text(
@@ -713,10 +818,14 @@ fun SettingNumberContent(
                     )
                     .align(Alignment.CenterVertically),
                 onClick = {
-                    if(isShowUp) onUpClick()
+                    if (isShowUp) onUpClick()
                 }
             ) {
-                if(isShowUp) Icon(imageVector = Icons.Rounded.KeyboardArrowUp, contentDescription = "up", tint = Color.Black)
+                if (isShowUp) Icon(
+                    imageVector = Icons.Rounded.KeyboardArrowUp,
+                    contentDescription = "up",
+                    tint = Color.Black
+                )
             }
         }
     }
@@ -726,12 +835,12 @@ fun SettingNumberContent(
 fun SettingLabel(
     modifier: Modifier = Modifier,
     isShowLabel: Boolean,
-    labelStyle: LabelStyle,
+    labelStyle: LabelStyleDP,
     textSpace: Dp,
     onChangedShowLabel: (Boolean) -> Unit,
-    onChangedLabelStyle: (LabelStyle) -> Unit,
+    onChangedLabelStyle: (LabelStyleDP) -> Unit,
     onChangedTextSpace: (Dp) -> Unit,
-){
+) {
     Column(
         modifier = modifier
     ) {
@@ -791,7 +900,7 @@ fun SettingLabel(
             onChangedChecked = {
                 onChangedLabelStyle(
                     labelStyle.copy(
-                        fontWeight = if(it) 700 else 500
+                        fontWeight = if (it) 700 else 500
                     )
                 )
             }
@@ -806,7 +915,7 @@ fun SettingGridLine(
     gridLineStyle: GridLineStyle,
     onChangedShowGridLine: (Boolean) -> Unit,
     onChangedGridLineStyle: (GridLineStyle) -> Unit,
-){
+) {
     Column(
         modifier = modifier
     ) {
@@ -854,7 +963,7 @@ fun SettingGridLine(
             onChangedChecked = {
                 onChangedGridLineStyle(
                     gridLineStyle.copy(
-                        pattern = if(it) LinePattern.Dashed() else LinePattern.Solid
+                        pattern = if (it) LinePattern.Dashed() else LinePattern.Solid
                     )
                 )
             }
@@ -868,7 +977,7 @@ fun SettingLine(
     modifier: Modifier = Modifier,
     lineStyle: LineStyle,
     onChangedLineStyle: (LineStyle) -> Unit,
-){
+) {
     Column(
         modifier = modifier
     ) {
@@ -912,7 +1021,7 @@ fun SettingLine(
             onChangedChecked = {
                 onChangedLineStyle(
                     lineStyle.copy(
-                        pattern = if(it) LinePattern.Dashed() else LinePattern.Solid
+                        pattern = if (it) LinePattern.Dashed() else LinePattern.Solid
                     )
                 )
             }
@@ -937,15 +1046,15 @@ fun LabelContent(
     modifier: Modifier = Modifier,
     isShowLabel: Boolean,
     isShowGridLine: Boolean,
-    labelStyle: LabelStyle,
+    labelStyle: LabelStyleDP,
     gridLineStyle: GridLineStyle,
     textSpace: Dp,
     onChangedShowLabel: (Boolean) -> Unit,
     onChangedShowGridLine: (Boolean) -> Unit,
-    onChangedLabelStyle: (LabelStyle) -> Unit,
+    onChangedLabelStyle: (LabelStyleDP) -> Unit,
     onChangedGridLineStyle: (GridLineStyle) -> Unit,
     onChangedTextSpace: (Dp) -> Unit,
-){
+) {
     Column(
         modifier = modifier
     ) {
