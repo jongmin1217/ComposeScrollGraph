@@ -6,7 +6,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -77,30 +76,52 @@ fun ScrollableGraph(
     val maxX by remember(allX) { mutableFloatStateOf(allX.maxOrNull() ?: 1f) }
     val yMinBound = (yAxisOpt.option as? YLabelOption.Show)?.min
     val yMaxBound = (yAxisOpt.option as? YLabelOption.Show)?.max
-    val minY by remember(allY, yMinBound) { mutableFloatStateOf(yMinBound ?: allY.minOrNull() ?: 0f) }
-    val maxY by remember(allY, yMaxBound) { mutableFloatStateOf(yMaxBound ?: allY.maxOrNull() ?: 1f) }
+    val minY by remember(allY, yMinBound) {
+        mutableFloatStateOf(
+            yMinBound ?: allY.minOrNull() ?: 0f
+        )
+    }
+    val maxY by remember(allY, yMaxBound) {
+        mutableFloatStateOf(
+            yMaxBound ?: allY.maxOrNull() ?: 1f
+        )
+    }
 
     val resolver = LocalFontFamilyResolver.current
 
     val xLabelPaint = remember(xAxisOpt) {
-        (xAxisOpt.option as? XLabelOption.Show)?.let {
+        if(xAxisOpt.option is XLabelOption.Show && xAxisOpt.option.style != null){
             Paint().apply {
-                typeface =resolver.resolve(xAxisOpt.option.style.fontFamily, FontWeight.Normal, FontStyle.Normal, FontSynthesis.All).value as android.graphics.Typeface
-                textSize = dpToPx(it.style.fontSize, density)
-                color = it.style.color.toArgb()
-                isFakeBoldText = it.style.fontWeight > 500
+                typeface = resolver.resolve(
+                    xAxisOpt.option.style.fontFamily,
+                    FontWeight.Normal,
+                    FontStyle.Normal,
+                    FontSynthesis.All
+                ).value as android.graphics.Typeface
+                textSize = dpToPx(xAxisOpt.option.style.fontSize, density)
+                color = xAxisOpt.option.style.color.toArgb()
+                isFakeBoldText = xAxisOpt.option.style.fontWeight > 500
             }
-        } ?: Paint()
+        }else{
+            Paint()
+        }
     }
     val yLabelPaint = remember(yAxisOpt) {
-        (yAxisOpt.option as? YLabelOption.Show)?.let {
+        if(yAxisOpt.option is YLabelOption.Show && yAxisOpt.option.style != null){
             Paint().apply {
-                typeface =resolver.resolve(yAxisOpt.option.style.fontFamily, FontWeight.Normal, FontStyle.Normal, FontSynthesis.All).value as android.graphics.Typeface
-                textSize = dpToPx(it.style.fontSize, density)
-                color = it.style.color.toArgb()
-                isFakeBoldText = it.style.fontWeight > 500
+                typeface = resolver.resolve(
+                    yAxisOpt.option.style.fontFamily,
+                    FontWeight.Normal,
+                    FontStyle.Normal,
+                    FontSynthesis.All
+                ).value as android.graphics.Typeface
+                textSize = dpToPx(yAxisOpt.option.style.fontSize, density)
+                color = yAxisOpt.option.style.color.toArgb()
+                isFakeBoldText = yAxisOpt.option.style.fontWeight > 500
             }
-        } ?: Paint()
+        }else{
+            Paint()
+        }
     }
 
     val yList by remember(minY, maxY, yAxisOpt) {
@@ -113,19 +134,28 @@ fun ScrollableGraph(
 
     val bottomPadding by remember(xAxisOpt, xLabelPaint) {
         mutableStateOf(
-            (xAxisOpt.option as? XLabelOption.Show)?.let {
+            if(xAxisOpt.option is XLabelOption.Show && xAxisOpt.option.style != null){
                 val d = xLabelPaint.fontMetrics.descent
-                it.style.fontSize + pxToDp(d, density) + it.textSpace
-            } ?: ((yAxisOpt.option as? YLabelOption.Show)?.style?.fontSize?.div(2) ?: 0.dp)
+                xAxisOpt.option.style.fontSize + pxToDp(d, density) + xAxisOpt.option.textSpace
+            }else{
+                ((yAxisOpt.option as? YLabelOption.Show)?.style?.fontSize?.div(2) ?: 0.dp)
+            }
         )
     }
 
     val startPadding by remember(yAxisOpt, yList, yLabelPaint) {
         mutableStateOf(
-            (yAxisOpt.option as? YLabelOption.Show)?.let { opt ->
-                val w = yList.maxOfOrNull { v -> yLabelPaint.measureText(String.format(opt.formatter, v)) } ?: 0f
-                pxToDp(w, density) + opt.textSpace
-            } ?: 0.dp
+            if(yAxisOpt.option is YLabelOption.Show && yAxisOpt.option.style != null){
+                val w = yList.maxOfOrNull { v ->
+                    yLabelPaint.measureText(
+                        String.format(
+                            yAxisOpt.option.formatter,
+                            v
+                        )
+                    )
+                } ?: 0f
+                pxToDp(w, density) + yAxisOpt.option.textSpace
+            }else 0.dp
         )
     }
     val topPadding by remember(yAxisOpt) {
@@ -136,27 +166,30 @@ fun ScrollableGraph(
         val heightDp = with(LocalDensity.current) { constraints.maxHeight.toDp() }
         if (yAxisOpt.option is YLabelOption.Show && yList.size >= 2) {
             val sortedDesc = remember(yList) { yList.sortedDescending() }
-            val space = (heightDp - topPadding - bottomPadding) / max(1, yAxisOpt.option.labelCount - 1)
+            val space =
+                (heightDp - topPadding - bottomPadding) / max(1, yAxisOpt.option.labelCount - 1)
             if (space > 0.dp) {
                 repeat(yAxisOpt.option.labelCount) { i ->
-                    Box(
-                        modifier = Modifier
-                            .width(startPadding - yAxisOpt.option.textSpace)
-                            .fillMaxHeight()
-                            .align(Alignment.TopStart)
-                    ) {
-                        Text(
-                            text = String.format(yAxisOpt.option.formatter, sortedDesc[i]),
+                    if(yAxisOpt.option.style != null){
+                        Box(
                             modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .padding(top = space * i),
-                            style = TextStyle(
-                                color = yAxisOpt.option.style.color,
-                                fontFamily = yAxisOpt.option.style.fontFamily,
-                                fontWeight = FontWeight(yAxisOpt.option.style.fontWeight)
-                            ),
-                            fontSize = yAxisOpt.option.style.fontSize.toSp()
-                        )
+                                .width(startPadding - yAxisOpt.option.textSpace)
+                                .fillMaxHeight()
+                                .align(Alignment.TopStart)
+                        ) {
+                            Text(
+                                text = String.format(yAxisOpt.option.formatter, sortedDesc[i]),
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(top = space * i),
+                                style = TextStyle(
+                                    color = yAxisOpt.option.style.color,
+                                    fontFamily = yAxisOpt.option.style.fontFamily,
+                                    fontWeight = FontWeight(yAxisOpt.option.style.fontWeight)
+                                ),
+                                fontSize = yAxisOpt.option.style.fontSize.toSp()
+                            )
+                        }
                     }
 
                     if (i in 1 until (yAxisOpt.option.labelCount - 1)) {
@@ -165,7 +198,7 @@ fun ScrollableGraph(
                                 .align(Alignment.TopStart)
                                 .padding(
                                     start = startPadding,
-                                    top = space * i + yAxisOpt.option.style.fontSize / 2
+                                    top = space * i + (if(yAxisOpt.option.style != null) (yAxisOpt.option.style.fontSize / 2) else 0.dp)
                                 )
                             if (grid.pattern is LinePattern.Dashed) {
                                 DashedDivider(
@@ -180,7 +213,7 @@ fun ScrollableGraph(
                                 HorizontalDivider(
                                     thickness = grid.thickness,
                                     color = grid.color,
-                                    modifier = lineMod.then(Modifier.padding(top = -(yAxisOpt.option.style.fontSize / 2)))
+                                    modifier = lineMod
                                 )
                             }
                         }
@@ -207,7 +240,9 @@ fun ScrollableGraph(
                     .horizontalScroll(rememberScrollState())
             ) {
                 ChartCanvas(
-                    modifier = Modifier.width(width).fillMaxHeight(),
+                    modifier = Modifier
+                        .width(width)
+                        .fillMaxHeight(),
                     lines = lines,
                     minX = minX,
                     maxX = maxX,
@@ -244,7 +279,11 @@ fun ScrollableGraph(
                     DashedDivider(
                         modifier = Modifier
                             .align(Alignment.CenterStart)
-                            .padding(start = startPadding, bottom = bottomPadding, top = topPadding),
+                            .padding(
+                                start = startPadding,
+                                bottom = bottomPadding,
+                                top = topPadding
+                            ),
                         orientation = DividerOrientation.Vertical,
                         thickness = left.style.thickness,
                         color = left.style.color,
@@ -364,13 +403,15 @@ fun ChartCanvas(
                             density = density
                         )
                     }
-                    val textWidth = xLabelPaint.measureText(text)
-                    drawContext.canvas.nativeCanvas.drawText(
-                        text,
-                        x - textWidth / 2,
-                        h - dpToPx(opt.style.fontSize, density) / 2,
-                        xLabelPaint
-                    )
+                    opt.style?.let { labelStyle ->
+                        val textWidth = xLabelPaint.measureText(text)
+                        drawContext.canvas.nativeCanvas.drawText(
+                            text,
+                            x - textWidth / 2,
+                            h - dpToPx(opt.style.fontSize, density) / 2,
+                            xLabelPaint
+                        )
+                    }
                 }
             }
             lines.forEach { line ->

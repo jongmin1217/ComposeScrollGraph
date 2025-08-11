@@ -12,7 +12,7 @@ sealed class XLabelOption{
     object Hide : XLabelOption()
     data class Show(
         val labelIndices: List<Pair<Double, String>> = listOf(),
-        val style: LabelStyle = LabelStyle(),
+        val style: LabelStyle? = null,
         val gridLine: GridLineStyle? = null,
         val textSpace : Dp = 10.dp
     ) : XLabelOption()
