@@ -257,14 +257,14 @@ val xAxis = XAxisOption(
 ```
 
 ### FAQs
-Q. Do I need Compose if I only use the XML View?
-A. No. The library hides Compose internally; you don’t need to enable Compose in your app module.
+- Q. Do I need Compose if I only use the XML View?
+- A. No. The library hides Compose internally; you don’t need to enable Compose in your app module.
 
-Q. Can I use resource colors on Compose screens?
-A. Yes—use the Px variants or convert via your own @Composable helpers if you prefer.
+- Q. Can I use resource colors on Compose screens?
+- A. Yes—use the Px variants or convert via your own @Composable helpers if you prefer.
 
-Q. How do dashed lines work?
-A. Use LinePattern.DashedDp (Compose) or LinePattern.DashedPx (XML). The library converts PX to DP under the hood.
+- Q. How do dashed lines work?
+- A. Use LinePattern.DashedDp (Compose) or LinePattern.DashedPx (XML). The library converts PX to DP under the hood.
 
 ### License
 ComposeScrollGraph is distributed under the terms of the Apache License (Version 2.0). See the [license](https://github.com/jongmin1217/ComposeRatingBar/blob/main/LICENSE) for more information.
