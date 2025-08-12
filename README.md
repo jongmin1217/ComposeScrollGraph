@@ -8,13 +8,13 @@ Perfect when you’re migrating a legacy app to Compose or you simply want a sin
 <img src="https://github.com/jongmin1217/ComposeScrollGraph/blob/main/readme/Sample.gif"></img>
 
 ### Features
-✅ Compose Composable: ScrollableGraph(chartOption = …)
-✅ XML View: <com.bellmin.scrollablegraph.view.ScrollableGraphView …/>
-✅ Multiple lines with per-line styling (color, thickness, caps, dashed)
-✅ X/Y axis labels, grid lines, formatters
-✅ Fixed or horizontally scrollable X-axis
-✅ “DP” and “PX” friendly APIs (use Compose types or platform ints/floats)
-✅ Optional custom fonts (resource based)
+- Compose Composable: ScrollableGraph(chartOption = …)
+- XML View: <com.bellmin.scrollablegraph.view.ScrollableGraphView …/>
+- Multiple lines with per-line styling (color, thickness, caps, dashed)
+- X/Y axis labels, grid lines, formatters
+- Fixed or horizontally scrollable X-axis
+- “DP” and “PX” friendly APIs (use Compose types or platform ints/floats)
+- Optional custom fonts (resource based)
 
 ### Installation
 Replace the coordinates with your group/artifact and latest version.
