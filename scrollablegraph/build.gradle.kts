@@ -58,7 +58,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId = "com.github.jongmin1217"
                 artifactId = "ComposeScrollGraph"
-                version = "1.0.0"
+                version = "1.0.1"
 
                 pom {
                     name.set("ComposeScrollGraph")
