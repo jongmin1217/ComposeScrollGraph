@@ -33,10 +33,6 @@ android {
     }
     buildFeatures {
         compose = true
-        viewBinding = true
-    }
-    dataBinding {
-        enable = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -52,4 +48,49 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     implementation(libs.bundles.compose)
+}
+
+
+afterEvaluate {
+    publishing {
+        publications {
+            create<MavenPublication>("release") {
+                from(components["release"])
+                groupId = "com.github.jongmin1217"
+                artifactId = "ComposeScrollGraph"
+                version = "1.0.0"
+
+                pom {
+                    name.set("ComposeScrollGraph")
+                    description.set("Compose Scroll Graph")
+                    url.set("https://github.com/jongmin1217/ComposeScrollGraph")
+                    licenses {
+                        license {
+                            name.set("The Apache License, Version 2.0")
+                            url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                        }
+                    }
+                    developers {
+                        developer {
+                            id.set("jongmin1217")
+                            name.set("Jongmin")
+                            email.set("syj408886@gmail.com")
+                        }
+                    }
+                    scm {
+                        connection.set("scm:git:github.com/jongmin1217/ComposeScrollGraph.git")
+                        developerConnection.set("scm:git:ssh://github.com/jongmin1217/ComposeScrollGraph.git")
+                        url.set("https://github.com/jongmin1217/ComposeScrollGraph")
+                    }
+                }
+            }
+        }
+
+        repositories {
+            maven {
+                name = "jitpack"
+                url = uri("https://jitpack.io")
+            }
+        }
+    }
 }

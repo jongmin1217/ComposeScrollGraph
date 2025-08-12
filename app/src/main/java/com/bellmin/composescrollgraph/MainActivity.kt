@@ -68,17 +68,17 @@ import com.bellmin.composescrollgraph.ui.theme.ComposeScrollGraphTheme
 import com.bellmin.scrollablegraph.ScrollableGraph
 import com.bellmin.scrollablegraph.data.ChartFrameOption
 import com.bellmin.scrollablegraph.data.ChartLine
-import com.bellmin.scrollablegraph.data.GraphChartLine
-import com.bellmin.scrollablegraph.data.GraphLinePattern
-import com.bellmin.scrollablegraph.data.GraphLineStyle
 import com.bellmin.scrollablegraph.data.GridLineStyle
-import com.bellmin.scrollablegraph.data.LabelStyle
-import com.bellmin.scrollablegraph.data.LabelStyleDP
-import com.bellmin.scrollablegraph.data.LabelStyleInt
+import com.bellmin.scrollablegraph.data.GridLineStyleDp
+import com.bellmin.scrollablegraph.data.GridLineStylePx
+import com.bellmin.scrollablegraph.data.LabelStyleDp
+import com.bellmin.scrollablegraph.data.LabelStylePx
 import com.bellmin.scrollablegraph.data.LineChartOption
 import com.bellmin.scrollablegraph.data.LineOption
 import com.bellmin.scrollablegraph.data.LinePattern
 import com.bellmin.scrollablegraph.data.LineStyle
+import com.bellmin.scrollablegraph.data.LineStyleDp
+import com.bellmin.scrollablegraph.data.LineStylePx
 import com.bellmin.scrollablegraph.data.XAxisMode
 import com.bellmin.scrollablegraph.data.XAxisOption
 import com.bellmin.scrollablegraph.data.XLabelOption
@@ -88,417 +88,439 @@ import com.bellmin.scrollablegraph.view.ScrollableGraphView
 import com.google.gson.Gson
 
 class MainActivity : ComponentActivity() {
-//    @SuppressLint("MissingInflatedId")
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//
-//        val jsonString = readAssetFile(this, "Intonationexample.json")
-//        val gson = Gson()
-//        val stt: Stt = gson.fromJson(jsonString, Stt::class.java)
-//        val sttItem = stt.resultData.result["5"]!!
-//        val xLabel =
-//            sttItem.words!!.map { (((it.start ?: 0.0) + (it.end ?: 0.0)) / 2) to (it.text ?: "") }
-//        val chartLines = sttItemToChartLines(
-//            sttItem,
-//            GraphLineStyle(
-//                color = R.color.teal_200,
-//                thickness = 6,
-//                isRoundCap = true,
-//                pattern = GraphLinePattern.Solid,
-//                context = this
-//            ),
-//            GraphLineStyle(
-//                color = R.color.teal_700,
-//                thickness = 6,
-//                isRoundCap = true,
-//                pattern = GraphLinePattern.Solid,
-//                context = this
-//            )
-//        )
-//
-//        val xAxisMode = XAxisMode.Scrollable(step = 0.001f, visibleRange = 1000f)
-//
-//        setContentView(R.layout.activity_main)
-//
-//        val scrollableGraphView = findViewById<ScrollableGraphView>(R.id.scrollableGraphView)
-//        scrollableGraphView.setChart(chartLines)
-//        scrollableGraphView.setXAxisMode(xAxisMode)
-//        scrollableGraphView.setXAxis(
-//            XAxisOption(
-//                XLabelOption.Show(
-//                    labelIndices = xLabel,
-//                    style = LabelStyleInt(
-//                        color = R.color.black,
-//                        fontSize = 20,
-//                        fontWeight = 700,
-//                        context = baseContext
-//                    ),
-//                    textSpace = 0.dp
-//                )
-//            )
-//        )
-//
-//
-//    }
-
+    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        val jsonString = readAssetFile(this, "Intonationexample.json")
+        val gson = Gson()
+        val stt: Stt = gson.fromJson(jsonString, Stt::class.java)
+        val sttItem = stt.resultData.result["5"]!!
+        val xLabel =
+            sttItem.words!!.map { (((it.start ?: 0.0) + (it.end ?: 0.0)) / 2) to (it.text ?: "") }
+        val chartLines = sttItemToChartLines(
+            sttItem,
+            LineStylePx(
+                color = R.color.teal_200,
+                thickness = resources.getDimension(R.dimen.dp_6),
+                isRoundCap = true,
+                pattern = LinePattern.Solid,
+            ),
+            LineStylePx(
+                color = R.color.teal_700,
+                thickness = resources.getDimension(R.dimen.dp_6),
+                isRoundCap = true,
+                pattern = LinePattern.Solid,
+            )
+        )
 
-        enableEdgeToEdge()
-        setContent {
-            ComposeScrollGraphTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    val jsonString = readAssetFile(this, "Intonationexample.json")
-                    val gson = Gson()
-                    val stt: Stt = gson.fromJson(jsonString, Stt::class.java)
+        val xAxisMode = XAxisMode.Scrollable(step = 0.001f, visibleRange = 1000f)
 
-                    val sttItem = stt.resultData.result["5"]!!
+        setContentView(R.layout.activity_main)
 
-                    val roboto = FontFamily(
-                        Font(R.font.spoqa_han_sans_neo_medium, FontWeight.Normal),
-                        Font(R.font.spoqa_han_sans_neo_bold, FontWeight.Bold)
-                    )
+        val scrollableGraphView = findViewById<ScrollableGraphView>(R.id.scrollableGraphView)
 
-                    // X Label
-                    var isShowXLabel by remember { mutableStateOf(true) }
-                    var xLabelStyle by remember { mutableStateOf(LabelStyleDP(fontFamily = roboto)) }
-                    var xLabelTextSpace by remember { mutableStateOf(10.dp) }
-                    var isShowXLabelGridLine by remember { mutableStateOf(true) }
-                    var xLabelGridLineStyle by remember { mutableStateOf(GridLineStyle()) }
-
-                    // Y Label
-                    var isShowYLabel by remember { mutableStateOf(true) }
-                    var yLabelStyle by remember { mutableStateOf(LabelStyleDP(fontFamily = roboto)) }
-                    var yLabelTextSpace by remember { mutableStateOf(10.dp) }
-                    var isShowYLabelGridLine by remember { mutableStateOf(true) }
-                    var yLabelGridLineStyle by remember { mutableStateOf(GridLineStyle()) }
-                    var yLabelCnt by remember { mutableIntStateOf(5) }
-
-                    // outline
-                    var isShowTopGridLine by remember { mutableStateOf(true) }
-                    var topGridLineStyle by remember { mutableStateOf(GridLineStyle()) }
-                    var isShowBottomGridLine by remember { mutableStateOf(true) }
-                    var bottomGridLineStyle by remember { mutableStateOf(GridLineStyle()) }
-                    var isShowLeftGridLine by remember { mutableStateOf(true) }
-                    var leftGridLineStyle by remember { mutableStateOf(GridLineStyle()) }
-                    var isShowRightGridLine by remember { mutableStateOf(true) }
-                    var rightGridLineStyle by remember { mutableStateOf(GridLineStyle()) }
-
-                    var energyLineStyle by remember {
-                        mutableStateOf(
-                            LineStyle(
-                                color = Color.Blue,
-                                thickness = 6.dp,
-                                isRoundCap = true,
-                                pattern = LinePattern.Solid
-                            )
+        val option = LineChartOption(
+            lines = chartLines,
+            xAxisMode = xAxisMode,
+            xAxis = XAxisOption(
+                XLabelOption.ShowPx(
+                    labelIndices = xLabel,
+                    style = LabelStylePx(
+                        color = R.color.black,
+                        fontSize = resources.getDimension(R.dimen.dp_20),
+                        fontWeight = 700,
+                    ),
+                    gridLine = GridLineStylePx(
+                        color = R.color.black,
+                        thickness = resources.getDimension(R.dimen.dp_2),
+                        pattern = LinePattern.DashedPx(
+                            dashLength = resources.getDimension(R.dimen.dp_6),
+                            gapLength = resources.getDimension(R.dimen.dp_3)
                         )
-                    }
-
-                    var intonationLineStyle by remember {
-                        mutableStateOf(
-                            LineStyle(
-                                color = Color.Red,
-                                thickness = 6.dp,
-                                isRoundCap = true,
-                                pattern = LinePattern.Solid
-                            )
-                        )
-                    }
-
-                    val xLabel = sttItem.words!!.map {
-                        (((it.start ?: 0.0) + (it.end ?: 0.0)) / 2) to (it.text ?: "")
-                    }
-                    val chartLines = sttItemToChartLines(
-                        sttItem,
-                        energyLineStyle,
-                        intonationLineStyle
-                    )
-
-                    var enableScroll by remember { mutableStateOf(true) }
-                    var visibleRange by remember { mutableFloatStateOf(2000f) }
-
-
-                    val chartOption = LineChartOption(
-                        lines = chartLines,
-                        xAxisMode = if (enableScroll) {
-                            XAxisMode.Scrollable(
-                                step = 0.001f,
-                                visibleRange = visibleRange
-                            )
-                        } else {
-                            XAxisMode.FixedRange
-                        },
-                        xAxis = XAxisOption(
-                            option = XLabelOption.Show(
-                                labelIndices = xLabel,
-                                style = if (isShowXLabel) xLabelStyle else null,
-                                gridLine = if (isShowXLabelGridLine) xLabelGridLineStyle else null,
-                                textSpace = xLabelTextSpace
-                            )
-                        ),
-                        yAxis = YAxisOption(
-                            option = YLabelOption.Show().copy(
-                                labelCount = yLabelCnt,
-                                gridLine = if (isShowYLabelGridLine) yLabelGridLineStyle else null,
-                                style = if (isShowYLabel) yLabelStyle else null,
-                                textSpace = yLabelTextSpace
-                            )
-                        ),
-                        chartFrame = ChartFrameOption(
-                            top = if (isShowTopGridLine) LineOption.Show(topGridLineStyle) else LineOption.Hide,
-                            bottom = if (isShowBottomGridLine) LineOption.Show(bottomGridLineStyle) else LineOption.Hide,
-                            left = if (isShowLeftGridLine) LineOption.Show(leftGridLineStyle) else LineOption.Hide,
-                            right = if (isShowRightGridLine) LineOption.Show(rightGridLineStyle) else LineOption.Hide,
-                        )
-                    )
-
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.White)
-                            .padding(innerPadding)
-                    ) {
-
-                        ScrollableGraph(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(300.dp)
-                                .padding(20.dp),
-                            chartOption = chartOption
-                        )
-
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .verticalScroll(rememberScrollState())
-                        ) {
-                            ExpandedContent(
-                                title = "X Label",
-                                content = {
-                                    LabelContent(
-                                        modifier = Modifier.padding(start = 20.dp),
-                                        isShowLabel = isShowXLabel,
-                                        isShowGridLine = isShowXLabelGridLine,
-                                        labelStyle = xLabelStyle,
-                                        gridLineStyle = xLabelGridLineStyle,
-                                        textSpace = xLabelTextSpace,
-                                        onChangedShowLabel = {
-                                            isShowXLabel = it
-                                        },
-                                        onChangedShowGridLine = {
-                                            isShowXLabelGridLine = it
-                                        },
-                                        onChangedLabelStyle = {
-                                            xLabelStyle = it
-                                        },
-                                        onChangedGridLineStyle = {
-                                            xLabelGridLineStyle = it
-                                        },
-                                        onChangedTextSpace = {
-                                            xLabelTextSpace = it
-                                        }
-                                    )
-                                }
-                            )
-
-                            ExpandedContent(
-                                modifier = Modifier.padding(top = 20.dp),
-                                title = "Y Label",
-                                content = {
-                                    Column(
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-
-                                        SettingNumberContent(
-                                            modifier = Modifier.padding(start = 20.dp),
-                                            title = "Label Count",
-                                            value = yLabelCnt.toString(),
-                                            isShowDown = yLabelCnt > 2,
-                                            onDownClick = {
-                                                yLabelCnt = yLabelCnt - 1
-                                            },
-                                            onUpClick = {
-                                                yLabelCnt = yLabelCnt + 1
-                                            }
-                                        )
-
-                                        LabelContent(
-                                            modifier = Modifier.padding(start = 20.dp),
-                                            isShowLabel = isShowYLabel,
-                                            isShowGridLine = isShowYLabelGridLine,
-                                            labelStyle = yLabelStyle,
-                                            gridLineStyle = yLabelGridLineStyle,
-                                            textSpace = yLabelTextSpace,
-                                            onChangedShowLabel = {
-                                                isShowYLabel = it
-                                            },
-                                            onChangedShowGridLine = {
-                                                isShowYLabelGridLine = it
-                                            },
-                                            onChangedLabelStyle = {
-                                                yLabelStyle = it
-                                            },
-                                            onChangedGridLineStyle = {
-                                                yLabelGridLineStyle = it
-                                            },
-                                            onChangedTextSpace = {
-                                                yLabelTextSpace = it
-                                            }
-                                        )
-                                    }
-                                }
-                            )
-
-                            ExpandedContent(
-                                modifier = Modifier.padding(top = 20.dp),
-                                title = "OutLine",
-                                content = {
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(start = 20.dp)
-                                    ) {
-                                        val list = listOf(
-                                            "Top",
-                                            "Bottom",
-                                            "Left",
-                                            "Right"
-                                        )
-
-                                        list.forEach { item ->
-                                            Text(
-                                                text = item,
-                                                style = TextStyle(
-                                                    fontSize = 20.dp.textSp,
-                                                    fontWeight = W700
-                                                ),
-                                                color = Color.Black,
-                                                modifier = Modifier.padding(top = 20.dp)
-                                            )
-
-                                            SettingGridLine(
-                                                isShowGridLine = when (item) {
-                                                    "Top" -> isShowTopGridLine
-                                                    "Bottom" -> isShowBottomGridLine
-                                                    "Left" -> isShowLeftGridLine
-                                                    else -> isShowRightGridLine
-                                                },
-                                                gridLineStyle = when (item) {
-                                                    "Top" -> topGridLineStyle
-                                                    "Bottom" -> bottomGridLineStyle
-                                                    "Left" -> leftGridLineStyle
-                                                    else -> rightGridLineStyle
-                                                },
-                                                onChangedShowGridLine = {
-                                                    when (item) {
-                                                        "Top" -> isShowTopGridLine = it
-                                                        "Bottom" -> isShowBottomGridLine = it
-                                                        "Left" -> isShowLeftGridLine = it
-                                                        "Right" -> isShowRightGridLine = it
-                                                    }
-                                                },
-                                                onChangedGridLineStyle = {
-                                                    when (item) {
-                                                        "Top" -> topGridLineStyle = it
-                                                        "Bottom" -> bottomGridLineStyle = it
-                                                        "Left" -> leftGridLineStyle = it
-                                                        "Right" -> rightGridLineStyle = it
-                                                    }
-                                                }
-                                            )
-                                        }
-
-                                    }
-                                }
-                            )
-
-
-                            ExpandedContent(
-                                modifier = Modifier.padding(top = 20.dp),
-                                title = "Graph Line",
-                                content = {
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(start = 20.dp)
-                                    ) {
-                                        val list = listOf(
-                                            "energy",
-                                            "intonation",
-                                        )
-
-                                        list.forEach { item ->
-                                            Text(
-                                                text = item,
-                                                style = TextStyle(
-                                                    fontSize = 20.dp.textSp,
-                                                    fontWeight = W700
-                                                ),
-                                                color = Color.Black,
-                                                modifier = Modifier.padding(top = 20.dp)
-                                            )
-
-                                            SettingLine(
-                                                lineStyle = when (item) {
-                                                    "energy" -> energyLineStyle
-                                                    else -> intonationLineStyle
-                                                },
-                                                onChangedLineStyle = {
-                                                    when (item) {
-                                                        "energy" -> energyLineStyle = it
-                                                        "intonation" -> intonationLineStyle = it
-                                                    }
-                                                },
-                                            )
-                                        }
-                                    }
-                                }
-                            )
-
-                            ExpandedContent(
-                                modifier = Modifier.padding(top = 20.dp),
-                                title = "Scrollable",
-                                content = {
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(start = 20.dp)
-                                    ) {
-                                        SwitchContent(
-                                            title = "Scrollable",
-                                            isChecked = enableScroll
-                                        ) {
-                                            enableScroll = it
-                                        }
-
-                                        SettingNumberContent(
-                                            title = "Visible Range",
-                                            value = visibleRange.toString(),
-                                            isShowDown = visibleRange >= 500f,
-                                            onDownClick = {
-                                                visibleRange = visibleRange - 100f
-                                            },
-                                            onUpClick = {
-                                                visibleRange = visibleRange + 100f
-                                            }
-                                        )
-
-                                        Spacer(Modifier.height(20.dp))
-                                    }
-                                }
-                            )
-
-
-                            Spacer(Modifier.height(20.dp))
-                        }
-                    }
-
-                }
-            }
-        }
+                    ),
+                    textSpace = resources.getDimension(R.dimen.dp_10)
+                )
+            ),
+            yAxis = YAxisOption(
+                YLabelOption.ShowPx(
+                    labelCount = 5,
+                    style = LabelStylePx(
+                        color = R.color.purple_500,
+                        fontSize = resources.getDimension(R.dimen.dp_20),
+                        fontWeight = 700,
+                    ),
+                    textSpace = resources.getDimension(R.dimen.dp_10),
+                    formatter = "%.0f",
+                    gridLine = GridLineStylePx(
+                        color = R.color.purple_500,
+                        thickness = resources.getDimension(R.dimen.dp_2),
+                        pattern = LinePattern.Solid
+                    ),
+                )
+            )
+        )
+        scrollableGraphView.setOption(option)
     }
+
+//    override fun onCreate(savedInstanceState: Bundle?) {
+//        super.onCreate(savedInstanceState)
+//
+//
+//        enableEdgeToEdge()
+//        setContent {
+//            ComposeScrollGraphTheme {
+//                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+//                    val jsonString = readAssetFile(this, "Intonationexample.json")
+//                    val gson = Gson()
+//                    val stt: Stt = gson.fromJson(jsonString, Stt::class.java)
+//
+//                    val sttItem = stt.resultData.result["5"]!!
+//
+//                    val roboto = FontFamily(
+//                        Font(R.font.spoqa_han_sans_neo_medium, FontWeight.Normal),
+//                        Font(R.font.spoqa_han_sans_neo_bold, FontWeight.Bold)
+//                    )
+//
+//                    // X Label
+//                    var isShowXLabel by remember { mutableStateOf(true) }
+//                    var xLabelStyle by remember { mutableStateOf(LabelStyleDp(fontFamily = roboto)) }
+//                    var xLabelTextSpace by remember { mutableStateOf(10.dp) }
+//                    var isShowXLabelGridLine by remember { mutableStateOf(true) }
+//                    var xLabelGridLineStyle by remember { mutableStateOf(GridLineStyleDp()) }
+//
+//                    // Y Label
+//                    var isShowYLabel by remember { mutableStateOf(true) }
+//                    var yLabelStyle by remember { mutableStateOf(LabelStyleDp(fontFamily = roboto)) }
+//                    var yLabelTextSpace by remember { mutableStateOf(10.dp) }
+//                    var isShowYLabelGridLine by remember { mutableStateOf(true) }
+//                    var yLabelGridLineStyle by remember { mutableStateOf(GridLineStyleDp()) }
+//                    var yLabelCnt by remember { mutableIntStateOf(5) }
+//
+//                    // outline
+//                    var isShowTopGridLine by remember { mutableStateOf(true) }
+//                    var topGridLineStyle by remember { mutableStateOf(GridLineStyleDp()) }
+//                    var isShowBottomGridLine by remember { mutableStateOf(true) }
+//                    var bottomGridLineStyle by remember { mutableStateOf(GridLineStyleDp()) }
+//                    var isShowLeftGridLine by remember { mutableStateOf(true) }
+//                    var leftGridLineStyle by remember { mutableStateOf(GridLineStyleDp()) }
+//                    var isShowRightGridLine by remember { mutableStateOf(true) }
+//                    var rightGridLineStyle by remember { mutableStateOf(GridLineStyleDp()) }
+//
+//                    var energyLineStyle by remember {
+//                        mutableStateOf(
+//                            LineStyleDp(
+//                                color = Color.Blue,
+//                                thickness = 6.dp,
+//                                isRoundCap = true,
+//                                pattern = LinePattern.Solid
+//                            )
+//                        )
+//                    }
+//
+//                    var intonationLineStyle by remember {
+//                        mutableStateOf(
+//                            LineStyleDp(
+//                                color = Color.Red,
+//                                thickness = 6.dp,
+//                                isRoundCap = true,
+//                                pattern = LinePattern.Solid
+//                            )
+//                        )
+//                    }
+//
+//                    val xLabel = sttItem.words!!.map {
+//                        (((it.start ?: 0.0) + (it.end ?: 0.0)) / 2) to (it.text ?: "")
+//                    }
+//                    val chartLines = sttItemToChartLines(
+//                        sttItem,
+//                        energyLineStyle,
+//                        intonationLineStyle
+//                    )
+//
+//                    var enableScroll by remember { mutableStateOf(true) }
+//                    var visibleRange by remember { mutableFloatStateOf(2000f) }
+//
+//
+//                    val chartOption = LineChartOption(
+//                        lines = chartLines,
+//                        xAxisMode = if (enableScroll) {
+//                            XAxisMode.Scrollable(
+//                                step = 0.001f,
+//                                visibleRange = visibleRange
+//                            )
+//                        } else {
+//                            XAxisMode.FixedRange
+//                        },
+//                        xAxis = XAxisOption(
+//                            option = XLabelOption.ShowDp(
+//                                labelIndices = xLabel,
+//                                style = if (isShowXLabel) xLabelStyle else null,
+//                                gridLine = if (isShowXLabelGridLine) xLabelGridLineStyle else null,
+//                                textSpace = xLabelTextSpace
+//                            )
+//                        ),
+//                        yAxis = YAxisOption(
+//                            option = YLabelOption.ShowDp().copy(
+//                                labelCount = yLabelCnt,
+//                                gridLine = if (isShowYLabelGridLine) yLabelGridLineStyle else null,
+//                                style = if (isShowYLabel) yLabelStyle else null,
+//                                textSpace = yLabelTextSpace
+//                            )
+//                        ),
+//                        chartFrame = ChartFrameOption(
+//                            top = if (isShowTopGridLine) LineOption.Show(topGridLineStyle) else LineOption.Hide,
+//                            bottom = if (isShowBottomGridLine) LineOption.Show(bottomGridLineStyle) else LineOption.Hide,
+//                            left = if (isShowLeftGridLine) LineOption.Show(leftGridLineStyle) else LineOption.Hide,
+//                            right = if (isShowRightGridLine) LineOption.Show(rightGridLineStyle) else LineOption.Hide,
+//                        )
+//                    )
+//
+//                    Column(
+//                        modifier = Modifier
+//                            .fillMaxSize()
+//                            .background(Color.White)
+//                            .padding(innerPadding)
+//                    ) {
+//
+//                        ScrollableGraph(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .height(300.dp)
+//                                .padding(20.dp),
+//                            chartOption = chartOption
+//                        )
+//
+//                        Column(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .verticalScroll(rememberScrollState())
+//                        ) {
+//                            ExpandedContent(
+//                                title = "X Label",
+//                                content = {
+//                                    LabelContent(
+//                                        modifier = Modifier.padding(start = 20.dp),
+//                                        isShowLabel = isShowXLabel,
+//                                        isShowGridLine = isShowXLabelGridLine,
+//                                        labelStyle = xLabelStyle,
+//                                        gridLineStyle = xLabelGridLineStyle,
+//                                        textSpace = xLabelTextSpace,
+//                                        onChangedShowLabel = {
+//                                            isShowXLabel = it
+//                                        },
+//                                        onChangedShowGridLine = {
+//                                            isShowXLabelGridLine = it
+//                                        },
+//                                        onChangedLabelStyle = {
+//                                            xLabelStyle = it
+//                                        },
+//                                        onChangedGridLineStyle = {
+//                                            xLabelGridLineStyle = it
+//                                        },
+//                                        onChangedTextSpace = {
+//                                            xLabelTextSpace = it
+//                                        }
+//                                    )
+//                                }
+//                            )
+//
+//                            ExpandedContent(
+//                                modifier = Modifier.padding(top = 20.dp),
+//                                title = "Y Label",
+//                                content = {
+//                                    Column(
+//                                        modifier = Modifier.fillMaxWidth()
+//                                    ) {
+//
+//                                        SettingNumberContent(
+//                                            modifier = Modifier.padding(start = 20.dp),
+//                                            title = "Label Count",
+//                                            value = yLabelCnt.toString(),
+//                                            isShowDown = yLabelCnt > 2,
+//                                            onDownClick = {
+//                                                yLabelCnt = yLabelCnt - 1
+//                                            },
+//                                            onUpClick = {
+//                                                yLabelCnt = yLabelCnt + 1
+//                                            }
+//                                        )
+//
+//                                        LabelContent(
+//                                            modifier = Modifier.padding(start = 20.dp),
+//                                            isShowLabel = isShowYLabel,
+//                                            isShowGridLine = isShowYLabelGridLine,
+//                                            labelStyle = yLabelStyle,
+//                                            gridLineStyle = yLabelGridLineStyle,
+//                                            textSpace = yLabelTextSpace,
+//                                            onChangedShowLabel = {
+//                                                isShowYLabel = it
+//                                            },
+//                                            onChangedShowGridLine = {
+//                                                isShowYLabelGridLine = it
+//                                            },
+//                                            onChangedLabelStyle = {
+//                                                yLabelStyle = it
+//                                            },
+//                                            onChangedGridLineStyle = {
+//                                                yLabelGridLineStyle = it
+//                                            },
+//                                            onChangedTextSpace = {
+//                                                yLabelTextSpace = it
+//                                            }
+//                                        )
+//                                    }
+//                                }
+//                            )
+//
+//                            ExpandedContent(
+//                                modifier = Modifier.padding(top = 20.dp),
+//                                title = "OutLine",
+//                                content = {
+//                                    Column(
+//                                        modifier = Modifier
+//                                            .fillMaxWidth()
+//                                            .padding(start = 20.dp)
+//                                    ) {
+//                                        val list = listOf(
+//                                            "Top",
+//                                            "Bottom",
+//                                            "Left",
+//                                            "Right"
+//                                        )
+//
+//                                        list.forEach { item ->
+//                                            Text(
+//                                                text = item,
+//                                                style = TextStyle(
+//                                                    fontSize = 20.dp.textSp,
+//                                                    fontWeight = W700
+//                                                ),
+//                                                color = Color.Black,
+//                                                modifier = Modifier.padding(top = 20.dp)
+//                                            )
+//
+//                                            SettingGridLine(
+//                                                isShowGridLine = when (item) {
+//                                                    "Top" -> isShowTopGridLine
+//                                                    "Bottom" -> isShowBottomGridLine
+//                                                    "Left" -> isShowLeftGridLine
+//                                                    else -> isShowRightGridLine
+//                                                },
+//                                                gridLineStyle = when (item) {
+//                                                    "Top" -> topGridLineStyle
+//                                                    "Bottom" -> bottomGridLineStyle
+//                                                    "Left" -> leftGridLineStyle
+//                                                    else -> rightGridLineStyle
+//                                                },
+//                                                onChangedShowGridLine = {
+//                                                    when (item) {
+//                                                        "Top" -> isShowTopGridLine = it
+//                                                        "Bottom" -> isShowBottomGridLine = it
+//                                                        "Left" -> isShowLeftGridLine = it
+//                                                        "Right" -> isShowRightGridLine = it
+//                                                    }
+//                                                },
+//                                                onChangedGridLineStyle = {
+//                                                    when (item) {
+//                                                        "Top" -> topGridLineStyle = it
+//                                                        "Bottom" -> bottomGridLineStyle = it
+//                                                        "Left" -> leftGridLineStyle = it
+//                                                        "Right" -> rightGridLineStyle = it
+//                                                    }
+//                                                }
+//                                            )
+//                                        }
+//
+//                                    }
+//                                }
+//                            )
+//
+//
+//                            ExpandedContent(
+//                                modifier = Modifier.padding(top = 20.dp),
+//                                title = "Graph Line",
+//                                content = {
+//                                    Column(
+//                                        modifier = Modifier
+//                                            .fillMaxWidth()
+//                                            .padding(start = 20.dp)
+//                                    ) {
+//                                        val list = listOf(
+//                                            "energy",
+//                                            "intonation",
+//                                        )
+//
+//                                        list.forEach { item ->
+//                                            Text(
+//                                                text = item,
+//                                                style = TextStyle(
+//                                                    fontSize = 20.dp.textSp,
+//                                                    fontWeight = W700
+//                                                ),
+//                                                color = Color.Black,
+//                                                modifier = Modifier.padding(top = 20.dp)
+//                                            )
+//
+//                                            SettingLine(
+//                                                lineStyle = when (item) {
+//                                                    "energy" -> energyLineStyle
+//                                                    else -> intonationLineStyle
+//                                                },
+//                                                onChangedLineStyle = {
+//                                                    when (item) {
+//                                                        "energy" -> energyLineStyle = it
+//                                                        "intonation" -> intonationLineStyle = it
+//                                                    }
+//                                                },
+//                                            )
+//                                        }
+//                                    }
+//                                }
+//                            )
+//
+//                            ExpandedContent(
+//                                modifier = Modifier.padding(top = 20.dp),
+//                                title = "Scrollable",
+//                                content = {
+//                                    Column(
+//                                        modifier = Modifier
+//                                            .fillMaxWidth()
+//                                            .padding(start = 20.dp)
+//                                    ) {
+//                                        SwitchContent(
+//                                            title = "Scrollable",
+//                                            isChecked = enableScroll
+//                                        ) {
+//                                            enableScroll = it
+//                                        }
+//
+//                                        SettingNumberContent(
+//                                            title = "Visible Range",
+//                                            value = visibleRange.toString(),
+//                                            isShowDown = visibleRange >= 500f,
+//                                            onDownClick = {
+//                                                visibleRange = visibleRange - 100f
+//                                            },
+//                                            onUpClick = {
+//                                                visibleRange = visibleRange + 100f
+//                                            }
+//                                        )
+//
+//                                        Spacer(Modifier.height(20.dp))
+//                                    }
+//                                }
+//                            )
+//
+//
+//                            Spacer(Modifier.height(20.dp))
+//                        }
+//                    }
+//
+//                }
+//            }
+//        }
+//    }
 
 
 }
@@ -509,10 +531,10 @@ fun readAssetFile(context: Context, fileName: String): String {
 
 fun sttItemToChartLines(
     sttItem: SttItem,
-    energyLineStyle: GraphLineStyle,
-    intonationLineStyle: GraphLineStyle
-): List<GraphChartLine> {
-    val lines = mutableListOf<GraphChartLine>()
+    energyLineStyle: LineStyleDp,
+    intonationLineStyle: LineStyleDp
+): List<ChartLine> {
+    val lines = mutableListOf<ChartLine>()
 
     // 예시: energy 그래프
     if (!sttItem.energyTime.isNullOrEmpty() && !sttItem.energyData.isNullOrEmpty()) {
@@ -521,7 +543,7 @@ fun sttItemToChartLines(
             sttItem.energyTime[i].toFloat() to sttItem.energyData[i].toFloat()
         }
         lines.add(
-            GraphChartLine(
+            ChartLine(
                 label = "energy",
                 points = points,
                 style = energyLineStyle
@@ -536,7 +558,7 @@ fun sttItemToChartLines(
             sttItem.intonationTime[i].toFloat() to sttItem.intonationData[i].toFloat()
         }
         lines.add(
-            GraphChartLine(
+            ChartLine(
                 label = "intonation",
                 points = points,
                 style = intonationLineStyle
@@ -835,10 +857,10 @@ fun SettingNumberContent(
 fun SettingLabel(
     modifier: Modifier = Modifier,
     isShowLabel: Boolean,
-    labelStyle: LabelStyleDP,
+    labelStyle: LabelStyleDp,
     textSpace: Dp,
     onChangedShowLabel: (Boolean) -> Unit,
-    onChangedLabelStyle: (LabelStyleDP) -> Unit,
+    onChangedLabelStyle: (LabelStyleDp) -> Unit,
     onChangedTextSpace: (Dp) -> Unit,
 ) {
     Column(
@@ -912,9 +934,9 @@ fun SettingLabel(
 fun SettingGridLine(
     modifier: Modifier = Modifier,
     isShowGridLine: Boolean,
-    gridLineStyle: GridLineStyle,
+    gridLineStyle: GridLineStyleDp,
     onChangedShowGridLine: (Boolean) -> Unit,
-    onChangedGridLineStyle: (GridLineStyle) -> Unit,
+    onChangedGridLineStyle: (GridLineStyleDp) -> Unit,
 ) {
     Column(
         modifier = modifier
@@ -963,7 +985,7 @@ fun SettingGridLine(
             onChangedChecked = {
                 onChangedGridLineStyle(
                     gridLineStyle.copy(
-                        pattern = if (it) LinePattern.Dashed() else LinePattern.Solid
+                        pattern = if (it) LinePattern.DashedDp() else LinePattern.Solid
                     )
                 )
             }
@@ -975,8 +997,8 @@ fun SettingGridLine(
 @Composable
 fun SettingLine(
     modifier: Modifier = Modifier,
-    lineStyle: LineStyle,
-    onChangedLineStyle: (LineStyle) -> Unit,
+    lineStyle: LineStyleDp,
+    onChangedLineStyle: (LineStyleDp) -> Unit,
 ) {
     Column(
         modifier = modifier
@@ -1021,7 +1043,7 @@ fun SettingLine(
             onChangedChecked = {
                 onChangedLineStyle(
                     lineStyle.copy(
-                        pattern = if (it) LinePattern.Dashed() else LinePattern.Solid
+                        pattern = if (it) LinePattern.DashedDp() else LinePattern.Solid
                     )
                 )
             }
@@ -1046,13 +1068,13 @@ fun LabelContent(
     modifier: Modifier = Modifier,
     isShowLabel: Boolean,
     isShowGridLine: Boolean,
-    labelStyle: LabelStyleDP,
-    gridLineStyle: GridLineStyle,
+    labelStyle: LabelStyleDp,
+    gridLineStyle: GridLineStyleDp,
     textSpace: Dp,
     onChangedShowLabel: (Boolean) -> Unit,
     onChangedShowGridLine: (Boolean) -> Unit,
-    onChangedLabelStyle: (LabelStyleDP) -> Unit,
-    onChangedGridLineStyle: (GridLineStyle) -> Unit,
+    onChangedLabelStyle: (LabelStyleDp) -> Unit,
+    onChangedGridLineStyle: (GridLineStyleDp) -> Unit,
     onChangedTextSpace: (Dp) -> Unit,
 ) {
     Column(

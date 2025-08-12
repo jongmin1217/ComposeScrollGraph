@@ -10,6 +10,6 @@ data class ChartFrameOption(
 sealed class LineOption{
     object Hide : LineOption()
     data class Show(
-        val style : GridLineStyle = GridLineStyle()
+        val style : GridLineStyle = GridLineStyleDp()
     ) : LineOption()
 }
